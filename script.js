@@ -1,157 +1,154 @@
-var calendarNode = document.querySelector("#calendar");
+let nav = 0;
+let clicked = null;
+let events = localStorage.getItem('events') ? JSON.parse(localStorage.getItem('events')) : [];
 
-var currDate = new Date();
-var currYear = currDate.getFullYear();
-var currMonth = currDate.getMonth() + 1;
-/*
-var currDay = currDate.getDate();
-let day= document.createElement("div");
-day.className = "day";
-day.append(currDay);
-*/
+const calendar = document.getElementById('calendar');
+const newEventModal = document.getElementById('newEventModal');
+const deleteEventModal = document.getElementById('deleteEventModal');
+const backDrop = document.getElementById('modalBackDrop');
+const eventTitleInput = document.getElementById('eventTitleInput');
+const eventTimeInputFrom = document.getElementById('eventTimeInputFrom');
+const eventTimeInputTo = document.getElementById('eventTimeInputTo');
+const weekdays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
-var selectedYear = currYear;
-var selectedMonth = currMonth;
-var selectedMonthName = getMonthName(selectedYear, selectedMonth);
-var selectedMonthDays = getDayCount(selectedYear, selectedMonth);
+function openModal(date) {
+  clicked = date;
 
-renderDOM(selectedYear, selectedMonth);
+  const eventForDay = events.find(e => e.date === clicked);
+  const eventTimeDayFrom = events.find(e => e.date === clicked);
+  const eventTimeDayTo = events.find(e => e.date === clicked);
 
-function getMonthName (year, month) {
-    let selectedDate = new Date(year, month-1, 1);
-    return selectedDate.toLocaleString('default', { month: 'long' });
-}
-
-function getMonthText () {
-    if (selectedYear === currYear)
-        return selectedMonthName;
-    else
-        return selectedMonthName + ", " + selectedYear;
-}
-
-function getDayName (year, month, day) {
-    let selectedDate = new Date(year, month-1, day);
-    return selectedDate.toLocaleDateString('en-US',{weekday: 'long'});
-}
-
-function getDayCount (year, month) {
-    return 32 - new Date(year, month-1, 32).getDate();
-}
-
-function getDaysArray () {
-    let emptyFieldsCount = 0;
-    let emptyFields = [];
-    let days = [];
-
-    switch(getDayName(selectedYear, selectedMonth, 1))
-    {
-        case "Tuesday":
-            emptyFieldsCount = 1;
-            break;
-        case "Wednesday":
-            emptyFieldsCount = 2;
-            break;
-        case "Thursday":
-            emptyFieldsCount = 3;
-            break;
-        case "Friday":
-            emptyFieldsCount = 4;
-            break;
-        case "Saturday":
-            emptyFieldsCount = 5;
-            break;
-        case "Sunday":
-            emptyFieldsCount = 6;
-            break;
-    }
-  
-    emptyFields = Array(emptyFieldsCount).fill("");
-    days = Array.from(Array(selectedMonthDays + 1).keys());
-    days.splice(0, 1);
+  if (eventForDay) {
+    document.getElementById('eventText').innerText = eventForDay.title;
+    document.getElementById('eventTimeFrom').innerText = eventTimeDayFrom.From;
+    document.getElementById('eventTimeTo').innerText = eventTimeDayTo.To;
     
-    return emptyFields.concat(days);
-}
+    deleteEventModal.style.display = 'block';
+  } else {
+    newEventModal.style.display = 'block';
+  }
 
-function renderDOM (year, month) {
-  let newCalendarNode = document.createElement("div");
-  newCalendarNode.id = "calendar";
-  newCalendarNode.className = "calendar";
+  backDrop.style.display = 'block';
+}
+function load() {
+  const dt = new Date();
+
+  if (nav !== 0) {
+    dt.setMonth(new Date().getMonth() + nav);
+  }
+
+  const day = dt.getDate();
+  const month = dt.getMonth();
+  const year = dt.getFullYear();
+
+  const firstDayOfMonth = new Date(year, month, 1);
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
   
-  let dateText = document.createElement("div");
-  dateText.append(getMonthText());
-  dateText.className = "date-text";
-  newCalendarNode.append(dateText);
-  
-  let leftArrow = document.createElement("div");
-  leftArrow.append("«");
-  leftArrow.className = "button";
-  leftArrow.addEventListener("click", goToPrevMonth);
-  newCalendarNode.append(leftArrow);
-  
-  let curr = document.createElement("div");
-  curr.append("📅");
-  curr.className = "button";
-  curr.addEventListener("click", goToCurrDate);
-  newCalendarNode.append(curr);
-  
-  let rightArrow = document.createElement("div");
-  rightArrow.append("»");
-  rightArrow.className = "button";
-  rightArrow.addEventListener("click", goToNextMonth);
-  newCalendarNode.append(rightArrow);
-  
-  let dayNames = ["M", "T", "W", "T", "F", "S", "S"];
-  
-  dayNames.forEach((cellText) => {
-    let cellNode = document.createElement("div");
-    cellNode.className = "cell cell--unselectable";
-    cellNode.append(cellText);
-    newCalendarNode.append(cellNode);
+  const dateString = firstDayOfMonth.toLocaleDateString('en-us', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'numeric',
+    day: 'numeric',
   });
-  
-  let days = getDaysArray(year, month);
-  
-  days.forEach((cellText) => {
-    let cellNode = document.createElement("div");
-    cellNode.className = "cell";
-    cellNode.append(cellText);
-    newCalendarNode.append(cellNode);
+  const paddingDays = weekdays.indexOf(dateString.split(', ')[0]);
+
+  document.getElementById('monthDisplay').innerText = 
+    `${dt.toLocaleDateString('en-us', { month: 'long' })} ${year}`;
+
+  calendar.innerHTML = '';
+
+  for(let i = 1; i <= paddingDays + daysInMonth; i++) {
+    const daySquare = document.createElement('div');
+    daySquare.classList.add('day');
+
+    const dayString = `${month + 1}/${i - paddingDays}/${year}`;
+
+    if (i > paddingDays) {
+      daySquare.innerText = i - paddingDays;
+      const eventForDay = events.find(e => e.date === dayString);
+      const eventTimeDayFrom = events.find(e => e.date === dayString);
+      const eventTimeDayTo = events.find(e => e.date === dayString);
+
+      if (i - paddingDays === day && nav === 0) {
+        daySquare.id = 'currentDay';
+      }
+
+      if (eventForDay) {
+        const eventDiv = document.createElement('div');
+        eventDiv.classList.add('event');
+        eventDiv.innerText = eventForDay.title;
+        // eventDiv.innerText = eventTimeDayFrom.from;
+        // eventDiv.innerText = eventTimeDayTo.To;
+        daySquare.appendChild(eventDiv);
+      }
+
+      daySquare.addEventListener('click', () => openModal(dayString));
+      // document.getElementById('addButton').addEventListener('click', () => openModal(dayString));
+    } else {
+      daySquare.classList.add('padding');
+    }
+
+    calendar.appendChild(daySquare);    
+  }
+}
+
+function closeModal() {
+  eventTitleInput.classList.remove('error');
+  eventTimeInputFrom.classList.remove('error');
+  eventTimeInputTo.classList.remove('error');
+  newEventModal.style.display = 'none';
+  deleteEventModal.style.display = 'none';
+  backDrop.style.display = 'none';
+  eventTitleInput.value = '';
+  eventTimeInputFrom.value='';
+  eventTimeInputTo.value = '';
+  clicked = null;
+  load();
+}
+
+function saveEvent() {
+  if ((eventTitleInput.value) || (eventTimeInputFrom.value) || (eventTimeInputTo.value)) {
+    eventTitleInput.classList.remove('error');
+    eventTimeInputFrom.classList.remove('error');
+    eventTimeInputTo.classList.remove('error');
+
+    events.push({
+      date: clicked,
+      title: eventTitleInput.value,
+      From: eventTimeInputFrom.value,
+      To: eventTimeInputTo.value
+    });
+
+    localStorage.setItem('events', JSON.stringify(events));
+    closeModal();
+  } else {
+    eventTitleInput.classList.add('error');
+  }
+}
+
+function deleteEvent() {
+  events = events.filter(e => e.date !== clicked);
+  localStorage.setItem('events', JSON.stringify(events));
+  closeModal();
+}
+
+function initButtons() {
+  document.getElementById('nextButton').addEventListener('click', () => {
+    nav++;
+    load();
   });
-  
-  calendarNode.replaceWith(newCalendarNode);
-  calendarNode = document.querySelector("#calendar");
+
+  document.getElementById('backButton').addEventListener('click', () => {
+    nav--;
+    load();
+  });
+
+  document.getElementById('saveButton').addEventListener('click', saveEvent);
+  document.getElementById('cancelButton').addEventListener('click', closeModal);
+  document.getElementById('deleteButton').addEventListener('click', deleteEvent);
+  document.getElementById('closeButton').addEventListener('click', closeModal);
+  // document.getElementById('addButton').addEventListener('click', () => openModal(dayString));
 }
 
-function goToPrevMonth () {
-    selectedMonth--;
-    if (selectedMonth === 0) {
-        selectedMonth = 12;
-        selectedYear--;
-    }
-    selectedMonthDays = getDayCount(selectedYear, selectedMonth);
-    selectedMonthName = getMonthName(selectedYear, selectedMonth);
-  
-    renderDOM(selectedYear, selectedMonth);
-}
-
-function goToNextMonth () {
-    selectedMonth++;
-    if (selectedMonth === 13) {
-        selectedMonth = 0;
-        selectedYear++;
-    }
-    selectedMonthDays = getDayCount(selectedYear, selectedMonth);
-    selectedMonthName = getMonthName(selectedYear, selectedMonth);
-  
-    renderDOM(selectedYear, selectedMonth);
-}
-
-function goToCurrDate () {
-    selectedYear = currYear;
-    selectedMonth = currMonth;
-
-    selectedMonthDays = getDayCount(selectedYear, selectedMonth);
-    selectedMonthName = getMonthName(selectedYear, selectedMonth);
-  
-    renderDOM(selectedYear, selectedMonth);
-}
+initButtons();
+load();
