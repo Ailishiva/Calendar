@@ -9,13 +9,13 @@ HostedLink  https://jovial-medovik-d010c6.netlify.app/
  - HTML
  - CSS 
  - JAVASCRIPT
- - JS Date funtions
+ - JS Date functions
  - DOM manipulation
  - JS events
 
  -----------------------------------------
 ## Description
-  Used Date funtion to display Date ,year and Months
+  Used Date function to display Date ,year and Months
  - Highlighted Current date
  - Onhover color change
  - colorout for non date days in month
